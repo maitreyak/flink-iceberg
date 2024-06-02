@@ -1,0 +1,46 @@
+###########################################
+# Flink - Iceberg - Nessie Setup
+###########################################
+
+version: "3"
+
+services:
+  catalog:
+    image: ghcr.io/projectnessie/nessie
+    container_name: catalog
+    ports:
+      - 19120:19120
+  # Minio Storage Server
+  storage:
+    image: minio/minio
+    container_name: storage
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=password
+      - MINIO_DOMAIN=storage
+      - MINIO_REGION_NAME=us-east-1
+      - MINIO_REGION=us-east-1
+    ports:
+      - 9001:9001
+      - 9000:9000
+    command: ["server", "/data", "--console-address", ":9001"]
+  # Minio Client Container
+  mc:
+    depends_on:
+      - storage
+    image: minio/mc
+    container_name: mc
+    environment:
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - AWS_REGION=us-east-1
+      - AWS_DEFAULT_REGION=us-east-1
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc config host add minio http://storage:9000 admin password) do echo '...waiting...' && sleep 1; done;
+      /usr/bin/mc rm -r --force minio/warehouse;
+      /usr/bin/mc mb minio/warehouse;
+      /usr/bin/mc mb minio/iceberg;
+      /usr/bin/mc policy set public minio/warehouse;
+      tail -f /dev/null
+      "

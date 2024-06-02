@@ -20,14 +20,6 @@ import static org.apache.flink.table.api.Expressions.$;
 public class App
 {
     public static void main(String[] args) throws Exception {
-
-        Configuration configuration = new Configuration();
-        configuration.setString("s3.endpoint", "http://127.0.0.1:9000");
-        configuration.setString("s3.access-key", "admin");
-        configuration.setString("s3.secret-key", "password");
-        FileSystem.initialize(configuration);
-
-
         // set up the execution environment
         final StreamExecutionEnvironment env =
                 StreamExecutionEnvironment.getExecutionEnvironment();
@@ -48,7 +40,9 @@ public class App
                         + "'ref'='main',"
                         + "'client.assume-role.region'='us-east-1',"
                         + "'warehouse' = 's3://warehouse',"
-                        + "'s3.endpoint'='http://127.0.0.1:9000'"
+                        + "'s3.endpoint'='http://127.0.0.1:9000',"
+                        + "'s3.access-key-id'='admin',"
+                        + "'s3.secret-access-key'='password'"
                         + ")");
 
 
